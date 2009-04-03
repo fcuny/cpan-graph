@@ -1,7 +1,10 @@
-#!/opt/perl/bin/perl -w
+#!/usr/bin/perl -w
 use strict;
 use feature ':5.10';
 use Getopt::Long;
+use XML::Simple;
+use YAML::Syck;
+use IO::All;
 
 use lib ( 'lib' );
 use CPAN::mapcpan;
@@ -13,48 +16,45 @@ my $options = GetOptions(
 
 my $dbmap = CPAN::cpanmap->connect( "dbi:SQLite:dbname=" . $db_map, "", "" );
 
-my $array_edges;
-my $hash_nodes;
+my $struct_graph;
 
 my $packages = $dbmap->resultset( 'packages' )->search;
-say "create nodes";
+print "creating nodes ... ";
+
+$struct_graph->{graph}->{attributes} = {
+    class => "node",
+    type => "dynamic",
+};
+
 while ( my $package = $packages->next ) {
-    $hash_nodes->{ $package->id } = {
-        tests  => $package->tests_success,
-        name   => $package->dist,
-        author => $package->author,
-        date   => $package->released,
+    $struct_graph->{ graph }->{ nodes }->{ $package->id } = {
+        id       => $package->id,
+        label    => $package->dist,
+        author   => $package->author,
+        date     => $package->released,
+        attvalue => [ { id => 0, value => $package->dist } ],
     };
 }
+say "done";
 
 my $edges = $dbmap->resultset( 'edges' )->search;
-say "create edges";
+say "creating edges ... ";
 while ( my $edge = $edges->next ) {
-    push @$array_edges,
+    push @{ $struct_graph->{ graph }->{ edges } },
         {
-        node1    => $edge->dist_from,
-        node2    => $edge->dist_to,
-        directed => 'true',
+        cardinal => 1,
+        source   => $edge->dist_from,
+        target   => $edge->dist_to,
+        attvalue => [ { id => 3, value => 'prereq' } ],
         };
 }
+say "done";
 
-#my $out = "nodedef>name VARCHAR,label VARCHAR,tests INTEGER,author VARCHAR,date VARCHAR\n";
-#foreach my $key ( keys %$hash_nodes ) {
-    #$out
-        #.= $key . ","
-        #. $hash_nodes->{ $key }->{ name } . ","
-        #. $hash_nodes->{ $key }->{ tests } . ","
-        #. $hash_nodes->{ $key }->{ author } . ","
-        #. $hash_nodes->{ $key }->{ date } . "\n";
-#}
-#$out .= "edgedef>node1 VARCHAR,node2 VARCHAR,directed BOOLEAN\n";
-#foreach my $edge ( @$array_edges ) {
-    #$out
-        #.= $edge->{ node1 } . ","
-        #. $edge->{ node2 } . ","
-        #. $edge->{ directed } . "\n";
-#}
-
-#open my $fh_gdf, '>', $output_gdf or die $!;
-#print $fh_gdf $out;
-#close $fh_gdf;
+print "generating gdf ... ";
+my $xml = XMLout(
+    $struct_graph,
+    AttrIndent => 1,
+    GroupTags  => { node => 'attvalue' }
+);
+$xml > io( $output_gdf );
+say "done";
