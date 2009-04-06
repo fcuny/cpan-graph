@@ -744,7 +744,7 @@ use base 'DBIx::Class';
 use strict;
 use warnings;
 
-__PACKAGE__->load_components( qw/ Core InflateColumn::DateTime/ );
+__PACKAGE__->load_components( qw/ Core / );
 __PACKAGE__->table( 'dist' );
 
 __PACKAGE__->add_columns(
