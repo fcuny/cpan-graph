@@ -5,6 +5,7 @@ use Getopt::Long;
 use XML::Simple;
 use YAML::Syck;
 use IO::All;
+use DateTime;
 
 use lib ( 'lib' );
 use CPAN::mapcpan;
@@ -35,23 +36,15 @@ say "done";
 print "creating nodes ... ";
 $struct_graph->{ gexf }->{ graph }->{ nodes } = {};
 my $packages = $dbmap->resultset( 'packages' )->search;
+
 while ( my $package = $packages->next ) {
-
-    my $datefrom
-        = ( $package->released )
-        ? substr( $package->released, 0, 10 )
-        : '1997-01-01';
-    $datefrom =~ s/1970-01-01/1997-01-01/;
-
-    #my $dateto = "";
+    my ( $year, $month, $day )
+        = $package->released =~ /^(\d{4})-(\d{2})-(\d{2})/;
     push @{ $struct_graph->{ gexf }->{ graph }->{ nodes }->{ node } }, {
         id       => $package->id,
         label    => $package->dist,
         author   => $package->author,
-        datefrom => $datefrom,
-
-        #dateto		=> $dateto,
-        attvalue => [ { id => 0, value => $package->dist } ],
+        datefrom     => join( '/', $year, $month, $day ),
     };
 }
 say "done";

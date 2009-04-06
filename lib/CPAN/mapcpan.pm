@@ -42,7 +42,7 @@ use base 'DBIx::Class';
 use strict;
 use warnings;
 
-__PACKAGE__->load_components( qw/ Core/ );
+__PACKAGE__->load_components( qw/InflateColumn::DateTime Core/ );
 __PACKAGE__->table( 'packages' );
 
 __PACKAGE__->add_columns(
@@ -61,6 +61,15 @@ __PACKAGE__->add_columns(
         'default_value'     => undef,
         'is_foreign_key'    => 0,
         'name'              => 'dist',
+        'is_nullable'       => 1,
+        'size'              => 0
+    },
+    'version' => {
+        'data_type'         => 'text',
+        'is_auto_increment' => 0,
+        'default_value'     => undef,
+        'is_foreign_key'    => 0,
+        'name'              => 'version',
         'is_nullable'       => 1,
         'size'              => 0
     },
@@ -83,7 +92,7 @@ __PACKAGE__->add_columns(
         'size'              => 0
     },
     'released' => {
-        'data_type'         => 'date',
+        'data_type'         => 'datetime',
         'is_auto_increment' => 0,
         'default_value'     => undef,
         'is_foreign_key'    => 0,
@@ -94,45 +103,6 @@ __PACKAGE__->add_columns(
 );
 __PACKAGE__->set_primary_key('id');
 
-package CPAN::cpanmap::modules;
-use base 'DBIx::Class';
-use strict;
-use warnings;
-
-__PACKAGE__->load_components( qw/ Core/ );
-__PACKAGE__->table( 'modules' );
-
-__PACKAGE__->add_columns(
-    'id' => {
-        'data_type'         => 'integer',
-        'is_auto_increment' => 0,
-        'default_value'     => undef,
-        'is_foreign_key'    => 0,
-        'name'              => 'id',
-        'is_nullable'       => 0,
-        'size'              => 0
-    },
-    'module' => {
-        'data_type'         => 'text',
-        'is_auto_increment' => 0,
-        'default_value'     => undef,
-        'is_foreign_key'    => 0,
-        'name'              => 'module',
-        'is_nullable'       => 1,
-        'size'              => 0
-    },
-    'in_dist' => {
-        'data_type'         => 'integer',
-        'is_auto_increment' => 0,
-        'default_value'     => undef,
-        'is_foreign_key'    => 0,
-        'name'              => 'in_dist',
-        'is_nullable'       => 1,
-        'size'              => 0
-    },
-);
-__PACKAGE__->set_primary_key('id');
-
 package CPAN::cpanmap;
 use base 'DBIx::Class::Schema';
 use strict;
@@ -140,6 +110,5 @@ use warnings;
 
 __PACKAGE__->register_class( 'edges',    'CPAN::cpanmap::edges' );
 __PACKAGE__->register_class( 'packages', 'CPAN::cpanmap::packages' );
-__PACKAGE__->register_class( 'modules',  'CPAN::cpanmap::modules' );
 
 1;

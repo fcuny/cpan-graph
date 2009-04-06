@@ -8,12 +8,16 @@ use lib ( 'lib' );
 use CPAN::Testers;
 use CPAN::cpants;
 use CPAN::mapcpan;
+use DateTime;
 
 my $options = GetOptions(
     'dbtest=s' => \my $db_test,
     'dball=s'  => \my $db_all,
     'dbout=s'  => \my $db_out,
 );
+
+# TODO 
+# generer une carte des auteurs
 
 my $sqltest
     = CPAN::Testers->connect( "dbi:SQLite:dbname=" . $db_test, '', '' );
@@ -29,16 +33,6 @@ while ( my $dist = $dists->next ) {
     my $map_package = $dbmap->resultset( 'packages' )
         ->find_or_create( { dist => $dist->dist, } );
 
-    my $modules
-        = $sqlall->resultset( 'modules' )->search( { dist => $dist->id } );
-    while ( my $module = $modules->next ) {
-        my $map_module = $dbmap->resultset( 'modules' )->find_or_create(
-            {   module  => $module->module,
-                in_dist => $map_package->id,
-            }
-        );
-    }
-
     my $tests_pass = $sqltest->resultset( 'reports' )
         ->count( { distribution => $dist->dist, status => 'PASS' } );
     my $tests_fail = $sqltest->resultset( 'reports' )
@@ -48,10 +42,13 @@ while ( my $dist = $dists->next ) {
     my $tests_success = int( ( $tests_pass / $total_tests ) * 100 );
 
     my $author = $sqlall->resultset( 'author' )->find( $dist->author );
+    my ($year, $month, $day) = $dist->released =~ /^(\d{4})-(\d{2})-(\d{2})/;
     $map_package->update(
         {   tests_success => $tests_success,
             author        => $author->pauseid,
-            released      => $dist->released,
+            version => $dist->version,
+            released =>
+                DateTime->new( year => $year, month => $month, day => $day ),
         }
     );
 
