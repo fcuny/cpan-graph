@@ -43,6 +43,8 @@ while ( my $dist = $dists->next ) {
 
     my $author = $sqlall->resultset( 'author' )->find( $dist->author );
     my ($year, $month, $day) = $dist->released =~ /^(\d{4})-(\d{2})-(\d{2})/;
+    next if (!defined $year || !defined $month || !defined $day);
+
     $map_package->update(
         {   tests_success => $tests_success,
             author        => $author->pauseid,
