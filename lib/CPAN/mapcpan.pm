@@ -42,7 +42,7 @@ use base 'DBIx::Class';
 use strict;
 use warnings;
 
-__PACKAGE__->load_components( qw/ Core/ );
+__PACKAGE__->load_components( qw/InflateColumn::DateTime Core/ );
 __PACKAGE__->table( 'packages' );
 
 __PACKAGE__->add_columns(
@@ -83,7 +83,7 @@ __PACKAGE__->add_columns(
         'size'              => 0
     },
     'released' => {
-        'data_type'         => 'date',
+        'data_type'         => 'datetime',
         'is_auto_increment' => 0,
         'default_value'     => undef,
         'is_foreign_key'    => 0,
