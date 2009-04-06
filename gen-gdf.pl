@@ -5,6 +5,7 @@ use Getopt::Long;
 use XML::Simple;
 use YAML::Syck;
 use IO::All;
+use DateTime;
 
 use lib ( 'lib' );
 use CPAN::mapcpan;
@@ -27,11 +28,13 @@ $struct_graph->{graph}->{attributes} = {
 };
 
 while ( my $package = $packages->next ) {
+    my ( $year, $month, $day )
+        = $package->released =~ /^(\d{4})-(\d{2})-(\d{2})/;
     $struct_graph->{ graph }->{ nodes }->{ $package->id } = {
         id       => $package->id,
         label    => $package->dist,
         author   => $package->author,
-        date     => $package->released->ymd('/'),
+        date     => join( '/', $year, $month, $day ),
         attvalue => [ { id => 0, value => $package->dist } ],
     };
 }
