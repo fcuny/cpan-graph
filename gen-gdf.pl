@@ -57,6 +57,7 @@ while ( my $package = $packages->next ) {
 say "done";
 
 print "creating edges ... ";
+my $id = 0;
 $struct_graph->{ gexf }->{ graph }->{ edges } = {};
 my $edges = $dbmap->resultset( 'edges' )->search;
 while ( my $edge = $edges->next ) {
@@ -64,7 +65,8 @@ while ( my $edge = $edges->next ) {
         cardinal => 1,
         source   => $edge->dist_from,
         target   => $edge->dist_to,
-
+        type => 'dir',
+        id => ++$id,
         #attvalue	=> [ { id => 3, value => 'prereq' } ],
     };
 }
