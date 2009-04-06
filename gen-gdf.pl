@@ -31,7 +31,7 @@ while ( my $package = $packages->next ) {
         id       => $package->id,
         label    => $package->dist,
         author   => $package->author,
-        date     => $package->released,
+        date     => $package->released->ymd('/'),
         attvalue => [ { id => 0, value => $package->dist } ],
     };
 }
