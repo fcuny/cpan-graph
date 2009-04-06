@@ -12,8 +12,11 @@ use CPAN::mapcpan;
 
 my $options = GetOptions(
     'out=s'   => \my $output_gdf,
-    'dbmap=s' => \my $db_map
+    'dbmap=s' => \my $db_map,
+    'type=s'  => \my $type,
+    'list=s'  => \my $list,
 );
+
 print "preparing gexf ... ";
 my $dbmap = CPAN::cpanmap->connect( "dbi:SQLite:dbname=" . $db_map, "", "" );
 
@@ -35,7 +38,17 @@ say "done";
 
 print "creating nodes ... ";
 $struct_graph->{ gexf }->{ graph }->{ nodes } = {};
-my $packages = $dbmap->resultset( 'packages' )->search;
+
+my $packages;
+
+$packages = $dbmap->resultset( 'packages' )->search(
+    {   -and => [
+            author => { '!=', 'null' },
+            released   => { '>',  '1970-01-01' }
+        ]
+    }
+);
+
 
 while ( my $package = $packages->next ) {
     my ( $year, $month, $day )
@@ -44,6 +57,7 @@ while ( my $package = $packages->next ) {
         id       => $package->id,
         label    => $package->dist,
         author   => $package->author,
+        version => $package->version,
         datefrom     => join( '/', $year, $month, $day ),
     };
 }
