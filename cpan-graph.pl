@@ -15,6 +15,9 @@ my $options = GetOptions(
     'dbout=s'  => \my $db_out,
 );
 
+# TODO 
+# generer une carte des auteurs
+
 my $sqltest
     = CPAN::Testers->connect( "dbi:SQLite:dbname=" . $db_test, '', '' );
 my $sqlall = CPAN::cpants->connect( "dbi:SQLite:dbname=" . $db_all, '', '' );
@@ -51,7 +54,7 @@ while ( my $dist = $dists->next ) {
     $map_package->update(
         {   tests_success => $tests_success,
             author        => $author->pauseid,
-            released      => $dist->released,
+            released      => $dist->released->ymd('/'),
         }
     );
 
