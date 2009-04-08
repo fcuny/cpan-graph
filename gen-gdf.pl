@@ -40,15 +40,25 @@ print "creating nodes ... ";
 $struct_graph->{ gexf }->{ graph }->{ nodes } = {};
 
 my $packages;
-
-$packages = $dbmap->resultset( 'packages' )->search(
-    {   -and => [
-            author => { '!=', 'null' },
-            released   => { '>',  '1970-01-01' }
-        ]
-    }
-);
-
+my $id_nodes;
+if ( $type && $type eq 'author' ) {
+    my $author_list = LoadFile( $list );
+    $packages = $dbmap->resultset( 'packages' )->search(
+        {   -and => [
+                author   => { 'in', $author_list},
+                released => { '>',  '1970-01-01' }
+            ]
+        }
+    );
+} else {
+    $packages = $dbmap->resultset( 'packages' )->search(
+        {   -and => [
+                author   => { '!=', 'null' },
+                released => { '>',  '1970-01-01' }
+            ]
+        }
+    );
+}
 
 while ( my $package = $packages->next ) {
     my ( $year, $month, $day )
@@ -60,21 +70,29 @@ while ( my $package = $packages->next ) {
         version => $package->version,
         datefrom     => join( '/', $year, $month, $day ),
     };
+    $id_nodes->{$package->id}++;
 }
 say "done";
 
 print "creating edges ... ";
 my $id = 0;
-$struct_graph->{ gexf }->{ graph }->{ edges } = {};
-my $edges = $dbmap->resultset( 'edges' )->search;
+my $edges;
+if ( $type && $type eq 'author' ) {
+    $edges = $dbmap->resultset( 'edges' )
+        ->search( { dist_from => { 'in' => [ keys %$id_nodes ] }, } );
+} else {
+    $edges = $dbmap->resultset( 'edges' )->search;
+}
+
 while ( my $edge = $edges->next ) {
+    next unless exists $id_nodes->{ $edge->dist_from };
+    next unless exists $id_nodes->{ $edge->dist_to };
     push @{ $struct_graph->{ gexf }->{ graph }->{ edges }->{ edge } }, {
         cardinal => 1,
         source   => $edge->dist_from,
         target   => $edge->dist_to,
         type => 'dir',
         id => ++$id,
-        #attvalue	=> [ { id => 3, value => 'prereq' } ],
     };
 }
 say "done";
