@@ -68,7 +68,7 @@ while ( my $package = $packages->next ) {
         label    => $package->dist,
         author   => $package->author,
         version => $package->version,
-        datefrom     => join( '/', $year, $month, $day ),
+        datefrom     => join( '-', $year, $month, $day ),
     };
     $id_nodes->{$package->id}++;
 }
